@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secret</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="matrix-bg"></div>
+    <div class="container">
+        <h1>Welcome to <span class="highlight">Secret</span></h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <button type="submit">Upload</button>
+        </form>
+        <br>
+        <a href="/storage">See Storage</a> | <a href="/logout">Logout</a>
+    </div>
+</body>
+</html>
