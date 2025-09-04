@@ -1,21 +1,19 @@
-from flask import Flask, render_template, request, redirect, send_from_directory, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for
 import os
+from supabase import create_client, Client
 from werkzeug.utils import secure_filename
 
+# Flask setup
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
-UPLOAD_FOLDER = 'static/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'txt', 'zip', 'mp4', 'mp3', 'docx', 'xlsx', 'pptx', 'csv', 'json', 'xml', 'html', 'css', 'js', 'svg', 'woff', 'woff2', 'ttf', 'eot', 'otf', 'ico', 'bmp', 'webp', 'avif', 'mkv', 'mov', 'avi', 'flv', 'wmv', 'mpg', 'mpeg', '3gp', '3g2', 'm4v', 'ts', 'm2ts', 'mts', 'asf', 'divx', 'xvid', 'rmvb', 'rm', 'dat', 'vob', 'ogv', 'ogg', 'opus', 'wav', 'flac', 'aac', 'm4a', 'wma', 'aiff', 'au', 'snd', 'cda', 'mid', 'midi', 'kar', 'sf2', 'sfz', 'dls', 'sflist', 'synth', 'vst', 'vsti', 'dll', 'exe', 'apk', 'ipa', 'appx', 'msi', 'bat', 'sh', 'pl', 'py', 'rb', 'php', 'jsp', 'asp', 'html5', 'css3', 'js3', 'json5', 'xml2', 'yaml', 'yml', 'toml', 'ini', 'cfg', 'properties', 'log', 'txt2', 'csv2', 'tsv', 'xlsx2', 'docx2', 'pptx2', 'odt', 'ods', 'odp', 'dotx', 'dotm', 'docm', 'xlsm', 'xlsb', 'pptm', 'potx', 'potm', 'ppsx', 'ppsm', 'ppsx2', 'pptx3', 'docx3', 'xlsx3', 'csv3', 'json3', 'xml3', 'html4', 'css4', 'js4', 'svg2', 'woff3', 'woff2', 'ttf2', 'eot2', 'otf2', 'ico2', 'bmp2', 'webp2', 'avif2'}   
+
+# Supabase setup
+url = "https://lxthnwowybpoxfaybrc.supabase.co"  # your project URL
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4bHRuaHdvd3lwYm94ZmF5YnJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5MTcyMTUsImV4cCI6MjA3MjQ5MzIxNX0.8PU4czvXQ4FhwUrBBelXXPSi7D_LaZLxwk0Fps7i26k"
+supabase: Client = create_client(url, key)
 
 USERNAME = 'sjup'
 PASSWORD = 'password'
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def is_logged_in():
     return session.get('logged_in')
@@ -50,25 +48,22 @@ def upload():
     if 'file' not in request.files:
         return redirect('/')
     file = request.files['file']
-    if file and allowed_file(file.filename):
+    if file:
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        # Upload file to Supabase bucket "uploads"
+        supabase.storage.from_("uploads").upload(filename, file)
+
     return redirect('/storage')
 
 @app.route('/storage')
 def storage():
     if not is_logged_in():
         return redirect('/login')
-    files = os.listdir(app.config['UPLOAD_FOLDER'])
+
+    # List files in Supabase bucket
+    files = supabase.storage.from_("uploads").list()
     return render_template('storage.html', files=files)
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    if not is_logged_in():
-        return redirect('/login')
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
