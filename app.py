@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session
 import os
 from supabase import create_client, Client
 from werkzeug.utils import secure_filename
+import time
 
 # Flask setup
 app = Flask(__name__)
@@ -12,6 +13,7 @@ url = "https://lxthnwowybpoxfaybrc.supabase.co"  # your project URL
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4bHRuaHdvd3lwYm94ZmF5YnJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5MTcyMTUsImV4cCI6MjA3MjQ5MzIxNX0.8PU4czvXQ4FhwUrBBelXXPSi7D_LaZLxwk0Fps7i26k"
 supabase: Client = create_client(url, key)
 
+# Dummy login
 USERNAME = 'sjup'
 PASSWORD = 'password'
 
@@ -47,12 +49,19 @@ def upload():
         return redirect('/login')
     if 'file' not in request.files:
         return redirect('/')
+    
     file = request.files['file']
     if file:
         filename = secure_filename(file.filename)
 
+        # Add timestamp to avoid overwriting old files
+        unique_filename = f"{int(time.time())}_{filename}"
+
         # Upload file to Supabase bucket "uploads"
-        supabase.storage.from_("uploads").upload(filename, file)
+        supabase.storage.from_("uploads").upload(
+            path=unique_filename,
+            file=file.read()
+        )
 
     return redirect('/storage')
 
@@ -65,5 +74,7 @@ def storage():
     files = supabase.storage.from_("uploads").list()
     return render_template('storage.html', files=files)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
