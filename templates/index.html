@@ -8,12 +8,16 @@
     <div class="matrix-bg"></div>
     <div class="container">
         <h1>Welcome to <span class="highlight">Secret</span></h1>
+
+        <h3>Upload a File</h3>
         <form action="/upload" method="post" enctype="multipart/form-data">
             <input type="file" name="file" required>
             <button type="submit">Upload</button>
         </form>
-        <br>
-        <a href="/storage">See Storage</a> | <a href="/logout">Logout</a>
+
+        <br><br>
+        <a href="/storage">📂 View Uploaded Files</a> | 
+        <a href="/logout">🚪 Logout</a>
     </div>
 </body>
 </html>

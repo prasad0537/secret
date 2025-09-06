@@ -3,18 +3,74 @@
 <head>
     <title>Storage - Secret</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .category-box {
+            border: 1px solid #00ff99;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            background-color: #000;
+        }
+        .category-title {
+            font-size: 22px;
+            color: #00ffcc;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #00ff99;
+            padding-bottom: 5px;
+        }
+        .file-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .file-list li {
+            margin: 10px 0;
+        }
+        .file-actions {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .file-actions form {
+            display: inline;
+        }
+    </style>
 </head>
 <body>
     <div class="matrix-bg"></div>
     <div class="container">
         <h1>Your <span class="highlight">Stored Files</span></h1>
-        <ul>
-            {% for file in files %}
-            <li><a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank">{{ file }}</a></li>
-            {% endfor %}
-        </ul>
-        <br>
-        <a href="/">Go Back</a> | <a href="/logout">Logout</a>
+        <a href="/">⬅ Go Back</a> | <a href="/logout">Logout</a>
+        <hr>
+
+        {% for category, file_list in files.items() %}
+            {% if file_list %}
+                <div class="category-box">
+                    <div class="category-title">
+                        {% if category == "pdf" %}📄 PDFs
+                        {% elif category == "images" %}🖼️ Images
+                        {% elif category == "videos" %}🎬 Videos
+                        {% elif category == "audio" %}🎵 Audio
+                        {% elif category == "docs" %}📁 Documents
+                        {% elif category == "archives" %}🗜️ Archives
+                        {% elif category == "code" %}💻 Code Files
+                        {% else %}📦 Others
+                        {% endif %}
+                    </div>
+                    <ul class="file-list">
+                        {% for file in file_list %}
+                            <li>
+                                {{ file['original_name'] }}
+                                <div class="file-actions">
+                                    <a href="https://lxthnwowybpoxfaybrc.supabase.co/storage/v1/object/public/uploads/{{ category }}/{{ file['storage_name'] }}" target="_blank">Download</a>
+                                    <form action="/delete/{{ category }}/{{ file['storage_name'] }}" method="post">
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endfor %}
     </div>
 </body>
 </html>
